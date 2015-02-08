@@ -22,19 +22,25 @@
             YELLOW = 0xFFD430,
             BLUE = 0x094AAB,
             ORANGE = 0xFD5A20,
-            GRAY = 0x222222,
+            GRAY = 0x999999,
             size = 100,
             gap = 10,
-            nbCubes = 10,
+            nbCubes = 3,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
             material = new THREE.MeshLambertMaterial({
-                opacity: 0.5,
-//                transparent: true,
-//                wireframe: true
+                opacity: 0.7,
+                transparent: true,
+//                wireframe: true,
                 vertexColors: THREE.FaceColors
             }),
             cubes = [],
-            start = -(size*(nbCubes-1))/2;
+            start = -(size*(nbCubes-1))/ 2,
+            groups = [],
+            groupIndex;
+
+    for (groupIndex=0;groupIndex<nbCubes;groupIndex++) {
+        groups.push(new THREE.Group());
+    }
 
     var scene = new THREE.Scene(),
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, size*nbCubes*5),
@@ -49,6 +55,9 @@
         faces[fn].color.setHex(color);
         faces[fn+1].color.setHex(color);
     };
+
+    var cubeRotCoef = 50,
+        cubeRot  = Math.random() / cubeRotCoef;
 
     for (var x = 0; x < nbCubes; x++) {
         for (var y = 0; y < nbCubes; y++) {
@@ -82,20 +91,24 @@
                         break;
                 }
                 var cube = new THREE.Mesh(geometry, material),
-                        p = cube.position,
-                        rotCoef = 10;
+                        p = cube.position;
                 p.x = start + (size * x);
                 p.y = start + (size * y);
                 p.z = start + (size * z);
-                scene.add(cube);
+                var rest = x % nbCubes;
+                groups[rest].add(cube);
                 cubes.push({
                     cube: cube,
-                    rotX: Math.random() / rotCoef,
-                    rotY: Math.random() / rotCoef,
-                    rotZ: Math.random() / rotCoef
+                    rotX: cubeRot,
+                    rotY: cubeRot,
+                    rotZ: cubeRot
                 });
             }
         }
+    }
+
+    for (groupIndex=0; groupIndex<groups.length; groupIndex++) {
+        scene.add(groups[groupIndex]);
     }
 
     // add subtle ambient lighting
@@ -103,12 +116,12 @@
     scene.add(ambientLight);
 
     // directional lighting
-    var directionalLight = new THREE.DirectionalLight(0xffffff);
-    directionalLight.position.set(1, 1, 1).normalize();
-    scene.add(directionalLight);
+//    var directionalLight = new THREE.DirectionalLight(0xffffff);
+//    directionalLight.position.set(0, 0, 1).normalize();
+//    scene.add(directionalLight);
 
     var directionalLight2 = new THREE.DirectionalLight(0xffffff);
-    directionalLight2.position.set(-1, -1, 1).normalize();
+    directionalLight2.position.set(0, 0.5, 0.9).normalize();
     scene.add(directionalLight2);
 
     var camPos = camera.position;
@@ -121,24 +134,39 @@
 //    var sphere = new THREE.Mesh(sphereGeom, sphereMat);
 //    scene.add(sphere);
 
-    var rotX = Math.random() / 100,
-            rotY = Math.random() / 100,
-            rotZ = Math.random() / 100;
+    var rotCoef = 30;
+    var rotX = Math.random() / rotCoef,
+            rotY = Math.random() / rotCoef,
+            rotZ = Math.random() / rotCoef,
+            frameNum = 0,
+            nbFrames = 120;
 
     function render() {
         requestAnimationFrame(render);
 
-        scene.rotation.x += rotX;
-        scene.rotation.y += rotY;
-        scene.rotation.z += rotZ;
-
-        for (var i = 0; i < cubes.length; i++) {
-            var c = cubes[i], cube = c.cube, r = cube.rotation;
-            r.x += c.rotX;
-            r.y += c.rotY;
-            r.z += c.rotZ;
+        for (groupIndex=0; groupIndex<groups.length; groupIndex++) {
+            var g = groups[groupIndex],
+                    r = g.rotation,
+                    add = groupIndex/2000;
+            if (frameNum>=nbFrames/2) {
+                add = -add;
+            }
+            r.x += rotX + add;
+            r.y += rotY + add;
+            r.z += rotZ + add;
         }
 
+        frameNum++;
+        if (frameNum>60*5) {
+            frameNum=0;
+        }
+
+//        for (var i = 0; i < cubes.length; i++) {
+//            var c = cubes[i], cube = c.cube, cr = cube.rotation;
+//            cr.x += c.rotX;
+//            cr.y += c.rotY;
+//            cr.z += c.rotZ;
+//        }
 
         renderer.render(scene, camera);
     }
