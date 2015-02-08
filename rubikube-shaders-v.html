@@ -24,14 +24,29 @@
     precision highp float;
     #endif
 
+    uniform float time;
     varying vec3 vNormal;
     varying vec3 vColor;
+    attribute float my;
 
     void main()
     {
-        vNormal = normalize(normalMatrix * normal);
-        vColor = color;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+
+       vColor = color;
+
+    float PI = 3.14159265358979323846264;
+      float angle = time*2.0;
+      float rad_angle = angle*PI/180.0;
+
+      vec4 a = vec4(position,1.0);
+      vec4 b = a;
+      b.x = a.x*cos(rad_angle) - a.y*sin(rad_angle);
+      b.y = a.y*cos(rad_angle) + a.x*sin(rad_angle);
+      gl_Position = projectionMatrix * modelViewMatrix * b;
+
+      float nx = normal.x*cos(rad_angle) - normal.y*sin(rad_angle);
+      float ny = normal.y*cos(rad_angle) - normal.x*sin(rad_angle);
+      vNormal = normalize(normalMatrix * (vec3(nx, ny, normal.z)));
     }
 
 </script>
@@ -49,8 +64,8 @@
     {
         vec3 light = vec3(0.0,1.0,1.0);
         light = normalize(light);
-        float dProd = max(0.0, dot(vNormal, light));
-        gl_FragColor = vec4(vColor * dProd, 0.9);
+        float dProd = abs(dot(vNormal, light));
+        gl_FragColor = vec4(vColor * dProd, 0.7);
     }
 
 </script>
@@ -69,10 +84,15 @@
             gap = 10,
             nbCubes = 12,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
+            attributes = {
+                my:{ type:'f', value:[]}
+            },
+            uniforms = {
+                time: { type: 'f', value:1.0 }
+            },
             material = new THREE.ShaderMaterial({
-//                uniforms: {
-//                    cubeRot: { type: 'vec3' }
-//                },
+                uniforms: uniforms,
+                attributes: attributes,
                 vertexShader:   $('#vertexshader').text(),
                 fragmentShader: $('#fragmentshader').text(),
                 vertexColors: THREE.VertexColors,
@@ -145,6 +165,11 @@
                 var rest = x % nbCubes;
                 groups[rest].add(cube);
                 var cubeRot = Math.random() / cubeRotCoef;
+                var vertices = geometry.vertices;
+                var values = attributes.my.value;
+                for( var v = 0; v < vertices.length; v++ ) {
+                    values[ v ] = cubeRot;
+                }
                 cubes.push({
                     cube: cube,
                     rotX: cubeRot,
@@ -168,8 +193,12 @@
             rotY = Math.random() / rotCoef,
             rotZ = Math.random() / rotCoef;
 
+    var clock = new THREE.Clock();
+
     function render() {
         requestAnimationFrame(render);
+
+        uniforms.time.value += clock.getDelta() * 10;
 
         for (groupIndex=0; groupIndex<groups.length; groupIndex++) {
             var g = groups[groupIndex],
@@ -183,17 +212,17 @@
             r.z += rotZ + add;
         }
 
-        frameNum++;
-        if (frameNum>60*5) {
-            frameNum=0;
-        }
-
-        for (var i = 0; i < cubes.length; i++) {
-            var c = cubes[i], cube = c.cube, cr = cube.rotation;
-            cr.x += c.rotX;
-            cr.y += c.rotY;
-            cr.z += c.rotZ;
-        }
+//        frameNum++;
+//        if (frameNum>60*5) {
+//            frameNum=0;
+//        }
+//
+//        for (var i = 0; i < cubes.length; i++) {
+//            var c = cubes[i], cube = c.cube, cr = cube.rotation;
+//            cr.x += c.rotX;
+//            cr.y += c.rotY;
+//            cr.z += c.rotZ;
+//        }
 
         renderer.render(scene, camera);
     }

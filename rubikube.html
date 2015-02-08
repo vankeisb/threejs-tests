@@ -22,10 +22,10 @@
             YELLOW = 0xFFD430,
             BLUE = 0x094AAB,
             ORANGE = 0xFD5A20,
-            GRAY = 0x888888,
+            GRAY = 0x222222,
             size = 100,
             gap = 10,
-            nbCubes = 6,
+            nbCubes = 12,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
             material = new THREE.MeshLambertMaterial({
                 opacity: 0.9,
@@ -56,7 +56,7 @@
         faces[fn+1].color.setHex(color);
     };
 
-    var cubeRotCoef = 100;
+    var cubeRotCoef = 10;
 
     for (var x = 0; x < nbCubes; x++) {
         for (var y = 0; y < nbCubes; y++) {
@@ -134,7 +134,7 @@
 //    var sphere = new THREE.Mesh(sphereGeom, sphereMat);
 //    scene.add(sphere);
 
-    var rotCoef = 60,
+    var rotCoef = 30,
         frameNum = 0,
         nbFrames = 120;
     var rotX = Math.random() / rotCoef,
