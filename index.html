@@ -1,0 +1,90 @@
+<html>
+<head>
+    <title>My first Three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+</head>
+<body>
+<script src="js/three.min.js"></script>
+<script>
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+
+    var range = 100, size = 75, step = size;// * 2;
+
+    var geometry = new THREE.BoxGeometry(size, size, size);
+
+    var material = new THREE.MeshLambertMaterial({
+        opacity: 0.3,
+        transparent: true
+    });
+
+    var cubes = [];
+
+    for (var x = -range; x < range; x += step) {
+        for (var y = -range; y < range; y += step) {
+            for (var z = -range; z < range; z += step) {
+                var cube = new THREE.Mesh(geometry, material),
+                        p = cube.position;
+                p.x = x;
+                p.y = y;
+                p.z = z;
+                scene.add(cube);
+                cubes.push({
+                    cube: cube,
+                    rotX: Math.random() / 50,
+                    rotY: Math.random() / 50,
+                    rotZ: Math.random() / 50
+                });
+            }
+        }
+    }
+
+    // add subtle ambient lighting
+    var ambientLight = new THREE.AmbientLight(0x222222);
+    scene.add(ambientLight);
+
+    // directional lighting
+    var directionalLight = new THREE.DirectionalLight(0xffffff);
+    directionalLight.position.set(1, 1, 1).normalize();
+    scene.add(directionalLight);
+
+//    camera.position.x = -step;
+    camera.position.z = 300;
+
+    function render() {
+        requestAnimationFrame(render);
+
+        scene.rotation.x += 0.003;
+        scene.rotation.y += 0.002;
+        scene.rotation.z += 0.001;
+
+        for (var i = 0; i < cubes.length; i++) {
+            var c = cubes[i], cube = c.cube, r = cube.rotation;
+//            r.x += c.rotX;
+//            r.y += c.rotY;
+//            r.z += c.rotZ;
+        }
+
+
+        renderer.render(scene, camera);
+    }
+    render();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<html>
+<head>
+    <title>My first Three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+</head>
+<body>
+<script src="js/three.min.js"></script>
+<script>
+
+    var WHITE = 0xFFFFFF,
+            GREEN = 0x159B4C,
+            RED = 0xB61737,
+            YELLOW = 0xFFD430,
+            BLUE = 0x094AAB,
+            ORANGE = 0xFD5A20,
+            GRAY = 0x222222,
+            size = 100,
+            gap = 10,
+            nbCubes = 4,
+            actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
+            material = new THREE.MeshLambertMaterial({
+                opacity: 0.5,
+                transparent: true,
+//                wireframe: true
+                vertexColors: THREE.FaceColors
+            }),
+            cubes = [],
+            start = -(size*(nbCubes-1))/2;
+
+    var scene = new THREE.Scene(),
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, size*nbCubes*5),
+            renderer = new THREE.WebGLRenderer();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    var setFaceColor = function(geom, faceNum, color) {
+        var faces = geom.faces,
+                fn = faceNum * 2;
+        faces[fn].color.setHex(color);
+        faces[fn+1].color.setHex(color);
+    };
+
+    for (var x = 0; x < nbCubes; x++) {
+        for (var y = 0; y < nbCubes; y++) {
+            for (var z = 0; z < nbCubes; z++) {
+                var geometry = new THREE.BoxGeometry(actualSize, actualSize, actualSize);
+                for (var faceIndex=0; faceIndex<geometry.faces.length; faceIndex++) {
+                    geometry.faces[faceIndex].color.setHex(GRAY);
+                }
+                switch(x) {
+                    case 0 :
+                        setFaceColor(geometry, 1, GREEN);
+                        break;
+                    case nbCubes-1 :
+                        setFaceColor(geometry, 0, BLUE);
+                        break;
+                }
+                switch(y) {
+                    case 0 :
+                        setFaceColor(geometry, 3, YELLOW);
+                        break;
+                    case nbCubes-1 :
+                        setFaceColor(geometry, 2, WHITE);
+                        break;
+                }
+                switch(z) {
+                    case 0 :
+                        setFaceColor(geometry, 5, ORANGE);
+                        break;
+                    case nbCubes-1 :
+                        setFaceColor(geometry, 4, RED);
+                        break;
+                }
+                var cube = new THREE.Mesh(geometry, material),
+                        p = cube.position;
+                p.x = start + (size * x);
+                p.y = start + (size * y);
+                p.z = start + (size * z);
+
+                console.log("cube : " + p.x + "," + p.y + "," + p.z);
+
+                scene.add(cube);
+                cubes.push({
+                    cube: cube,
+                    rotX: Math.random() / 100,
+                    rotY: Math.random() / 100,
+                    rotZ: Math.random() / 100
+                });
+            }
+        }
+    }
+
+    // add subtle ambient lighting
+    var ambientLight = new THREE.AmbientLight(0x222222);
+    scene.add(ambientLight);
+
+    // directional lighting
+    var directionalLight = new THREE.DirectionalLight(0xffffff);
+    directionalLight.position.set(1, 1, 1).normalize();
+    scene.add(directionalLight);
+
+    var directionalLight2 = new THREE.DirectionalLight(0xffffff);
+    directionalLight2.position.set(-1, -1, 1).normalize();
+    scene.add(directionalLight2);
+
+    var camPos = camera.position;
+    camPos.z = size * nbCubes * 1.5;
+
+//    var sphereGeom = new THREE.SphereGeometry(100);
+//    var sphereMat = new THREE.MeshLambertMaterial({
+//        color: 0xEff0000
+//    });
+//    var sphere = new THREE.Mesh(sphereGeom, sphereMat);
+//    scene.add(sphere);
+
+    function render() {
+        requestAnimationFrame(render);
+
+        scene.rotation.x += 0.01;
+        scene.rotation.y += 0.03;
+        scene.rotation.z += 0.02;
+
+//        for (var i = 0; i < cubes.length; i++) {
+//            var c = cubes[i], cube = c.cube, r = cube.rotation;
+//            r.x += c.rotX;
+//            r.y += c.rotY;
+//            r.z += c.rotZ;
+//        }
+
+
+        renderer.render(scene, camera);
+    }
+    render();
+
+</script>
+</body>
+</html>
