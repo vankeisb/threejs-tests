@@ -25,11 +25,11 @@
             GRAY = 0x222222,
             size = 100,
             gap = 10,
-            nbCubes = 4,
+            nbCubes = 10,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
             material = new THREE.MeshLambertMaterial({
                 opacity: 0.5,
-                transparent: true,
+//                transparent: true,
 //                wireframe: true
                 vertexColors: THREE.FaceColors
             }),
@@ -82,19 +82,17 @@
                         break;
                 }
                 var cube = new THREE.Mesh(geometry, material),
-                        p = cube.position;
+                        p = cube.position,
+                        rotCoef = 10;
                 p.x = start + (size * x);
                 p.y = start + (size * y);
                 p.z = start + (size * z);
-
-                console.log("cube : " + p.x + "," + p.y + "," + p.z);
-
                 scene.add(cube);
                 cubes.push({
                     cube: cube,
-                    rotX: Math.random() / 100,
-                    rotY: Math.random() / 100,
-                    rotZ: Math.random() / 100
+                    rotX: Math.random() / rotCoef,
+                    rotY: Math.random() / rotCoef,
+                    rotZ: Math.random() / rotCoef
                 });
             }
         }
@@ -123,19 +121,23 @@
 //    var sphere = new THREE.Mesh(sphereGeom, sphereMat);
 //    scene.add(sphere);
 
+    var rotX = Math.random() / 100,
+            rotY = Math.random() / 100,
+            rotZ = Math.random() / 100;
+
     function render() {
         requestAnimationFrame(render);
 
-        scene.rotation.x += 0.01;
-        scene.rotation.y += 0.03;
-        scene.rotation.z += 0.02;
+        scene.rotation.x += rotX;
+        scene.rotation.y += rotY;
+        scene.rotation.z += rotZ;
 
-//        for (var i = 0; i < cubes.length; i++) {
-//            var c = cubes[i], cube = c.cube, r = cube.rotation;
-//            r.x += c.rotX;
-//            r.y += c.rotY;
-//            r.z += c.rotZ;
-//        }
+        for (var i = 0; i < cubes.length; i++) {
+            var c = cubes[i], cube = c.cube, r = cube.rotation;
+            r.x += c.rotX;
+            r.y += c.rotY;
+            r.z += c.rotZ;
+        }
 
 
         renderer.render(scene, camera);
