@@ -13,7 +13,48 @@
     </style>
 </head>
 <body>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
 <script src="js/three.min.js"></script>
+<!-- Shaders -->
+<script type="x-shader/x-vertex" id="vertexshader">
+
+    // switch on high precision floats
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vNormal;
+    varying vec3 vColor;
+
+    void main()
+    {
+        vNormal = normal;
+        vColor = color;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vNormal;
+    varying vec3 vColor;
+
+    void main()
+    {
+        vec3 light = vec3(0.5,0.2,1.0);
+        light = normalize(light);
+//        float dProd = max(0.0, dot(vNormal, light));
+//        gl_FragColor = vec4(dProd, dProd, dProd, 1.0);
+        gl_FragColor = vec4(vColor * dot(vNormal, light), 0.7);
+    }
+
+</script>
 <script>
 
     var WHITE = 0xFFFFFF,
@@ -25,13 +66,13 @@
             GRAY = 0x888888,
             size = 100,
             gap = 10,
-            nbCubes = 6,
+            nbCubes = 12,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
-            material = new THREE.MeshLambertMaterial({
-                opacity: 0.9,
-                transparent: true,
-//                wireframe: true,
-                vertexColors: THREE.FaceColors
+            material = new THREE.ShaderMaterial({
+                vertexShader:   $('#vertexshader').text(),
+                fragmentShader: $('#fragmentshader').text(),
+                vertexColors: THREE.VertexColors,
+                transparent: true
             }),
             cubes = [],
             start = -(size*(nbCubes-1))/ 2,
@@ -52,18 +93,23 @@
     var setFaceColor = function(geom, faceNum, color) {
         var faces = geom.faces,
                 fn = faceNum * 2;
-        faces[fn].color.setHex(color);
-        faces[fn+1].color.setHex(color);
+        for (var vi = 0; vi < 3; vi++) {
+            faces[fn].vertexColors[vi] = new THREE.Color(color);
+            faces[fn+1].vertexColors[vi] = new THREE.Color(color);
+        }
     };
 
-    var cubeRotCoef = 100;
+    var cubeRotCoef = 10,
+            rotCoef = 100;
 
     for (var x = 0; x < nbCubes; x++) {
         for (var y = 0; y < nbCubes; y++) {
             for (var z = 0; z < nbCubes; z++) {
                 var geometry = new THREE.BoxGeometry(actualSize, actualSize, actualSize);
                 for (var faceIndex=0; faceIndex<geometry.faces.length; faceIndex++) {
-                    geometry.faces[faceIndex].color.setHex(GRAY);
+                    geometry.faces[faceIndex].vertexColors[0] = new THREE.Color(GRAY);
+                    geometry.faces[faceIndex].vertexColors[1] = new THREE.Color(GRAY);
+                    geometry.faces[faceIndex].vertexColors[2] = new THREE.Color(GRAY);
                 }
                 switch(x) {
                     case 0 :
@@ -111,31 +157,10 @@
         scene.add(groups[groupIndex]);
     }
 
-    // add subtle ambient lighting
-    var ambientLight = new THREE.AmbientLight(0x222222);
-    scene.add(ambientLight);
-
-    // directional lighting
-//    var directionalLight = new THREE.DirectionalLight(0xffffff);
-//    directionalLight.position.set(0, 0, 1).normalize();
-//    scene.add(directionalLight);
-
-    var directionalLight2 = new THREE.DirectionalLight(0xffffff);
-    directionalLight2.position.set(0, 0.5, 0.9).normalize();
-    scene.add(directionalLight2);
-
     var camPos = camera.position;
     camPos.z = size * nbCubes * 1.5;
 
-//    var sphereGeom = new THREE.SphereGeometry(100);
-//    var sphereMat = new THREE.MeshLambertMaterial({
-//        color: 0xEff0000
-//    });
-//    var sphere = new THREE.Mesh(sphereGeom, sphereMat);
-//    scene.add(sphere);
-
-    var rotCoef = 60,
-        frameNum = 0,
+    var frameNum = 0,
         nbFrames = 120;
     var rotX = Math.random() / rotCoef,
             rotY = Math.random() / rotCoef,
@@ -173,5 +198,5 @@
     render();
 
 </script>
-</body>
+
 </html>
