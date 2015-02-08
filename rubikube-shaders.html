@@ -29,7 +29,7 @@
 
     void main()
     {
-        vNormal = normal;
+        vNormal = normalize(normalMatrix * normal);
         vColor = color;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
@@ -49,29 +49,34 @@
     {
         vec3 light = vec3(0.5,0.2,1.0);
         light = normalize(light);
-//        float dProd = max(0.0, dot(vNormal, light));
-//        gl_FragColor = vec4(dProd, dProd, dProd, 1.0);
-        gl_FragColor = vec4(vColor * dot(vNormal, light), 0.7);
+        float dProd = max(0.0, dot(vNormal, light));
+        gl_FragColor = vec4(vColor * dProd, 0.7);
     }
 
 </script>
 <script>
 
-    var WHITE = 0xFFFFFF,
+    var     cubeRotCoef = 30,
+            rotCoef = 100,
+            WHITE = 0xFFFFFF,
             GREEN = 0x159B4C,
             RED = 0xB61737,
             YELLOW = 0xFFD430,
             BLUE = 0x094AAB,
             ORANGE = 0xFD5A20,
-            GRAY = 0x888888,
+            GRAY = 0x222222,
             size = 100,
             gap = 10,
             nbCubes = 12,
             actualSize = (size*nbCubes - gap*(nbCubes-1)) / nbCubes,
             material = new THREE.ShaderMaterial({
+//                uniforms: {
+//                    cubeRot: { type: 'vec3' }
+//                },
                 vertexShader:   $('#vertexshader').text(),
                 fragmentShader: $('#fragmentshader').text(),
                 vertexColors: THREE.VertexColors,
+//                needsUpdate: true,
                 transparent: true
             }),
             cubes = [],
@@ -98,9 +103,6 @@
             faces[fn+1].vertexColors[vi] = new THREE.Color(color);
         }
     };
-
-    var cubeRotCoef = 10,
-            rotCoef = 100;
 
     for (var x = 0; x < nbCubes; x++) {
         for (var y = 0; y < nbCubes; y++) {
