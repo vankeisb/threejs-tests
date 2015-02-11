@@ -1,0 +1,109 @@
+<html>
+<head>
+    <title>My first Three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+</head>
+<body>
+</body>
+<script src="js/jquery-1.11.2.min.js"></script>
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<!-- Shaders -->
+<script type="x-shader/x-vertex" id="vertexshader">
+
+    // switch on high precision floats
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vNormal;
+    varying vec3 vColor;
+
+    void main()
+    {
+        vNormal = normalize(normalMatrix * normal);
+        vColor = color;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }
+
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+
+    varying vec3 vNormal;
+    varying vec3 vColor;
+
+    void main()
+    {
+        vec3 light = vec3(0.0,0.0,1.0);
+        light = normalize(light);
+        float dProd = max(0.5, dot(vNormal, light));
+        gl_FragColor = vec4(vColor * dProd, 0.9);
+//        gl_FragColor = vec4(1.0, 0.9);
+    }
+
+</script>
+<script>
+
+    var material = new THREE.ShaderMaterial({
+//                uniforms: {
+//                    cubeRot: { type: 'vec3' }
+//                },
+        vertexShader:   $('#vertexshader').text(),
+        fragmentShader: $('#fragmentshader').text(),
+        vertexColors: THREE.VertexColors,
+        wireframe: true,
+//                needsUpdate: true,
+        transparent: true
+    });
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    var renderer = new THREE.WebGLRenderer();
+
+    var setVertexColors = function(geom) {
+        var color = new THREE.Color(0xFFFFFF);
+        var faces = geom.faces;
+        for (var i = 0; i < faces.length; i++) {
+            for (var j=0; j<3; j++) {
+                faces[i].vertexColors[j] = color;
+            }
+        }
+        return geom;
+    };
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    camera.position.z = 200;
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    var geometry = setVertexColors(new THREE.SphereGeometry(100, 20, 20));
+    var mesh = new THREE.Mesh(geometry, material);
+
+    scene.add(mesh);
+
+    function render() {
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+        controls.update();
+    }
+    render();
+
+</script>
+
+</html>
