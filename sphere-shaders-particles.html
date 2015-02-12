@@ -21,7 +21,8 @@
 <!-- Custom shaders for particle effects -->
 <script type="x-shader/x-vertex" id="vertexshader">
 varying vec3 vColor;
-varying vec3 vNormal;
+varying float vPointSize;
+
 uniform float step;
 
 float realign(float f) {
@@ -34,12 +35,15 @@ float realign(float f) {
 
 void main()
 {
-    vNormal = normalize(normalMatrix * normal);
 	vColor = vec3(1.0, 1.0, 0.0); // set RGB color associated to vertex; use later in fragment shader.
 	vec3 realigned = vec3(realign(position.x), realign(position.y), realign(position.z));
 	vec4 mvPosition = modelViewMatrix * vec4( realigned, 1.0 );
 
-	//vPointSize = 500.0 / length( mvPosition.xyz );
+	// option (1): draw particles at constant size on screen
+	//gl_PointSize = 5.0;
+    // option (2): scale particles as objects in 3D space
+    vPointSize = 500.0 / length( mvPosition.xyz );
+	gl_PointSize = vPointSize * 4.0;
 	gl_Position = projectionMatrix * mvPosition;
 }
 </script>
@@ -48,15 +52,10 @@ void main()
 uniform sampler2D texture;
 varying vec3 vColor; // colors associated to vertices; assigned by vertex shader
 varying float vPointSize;
-varying vec3 vNormal;
 void main()
 {
-    vec3 light = vec3(0.0,0.5,1.0);
-    light = normalize(light);
-    float dProd = max(0.2, dot(vNormal, light));
-    gl_FragColor = vec4(vColor * dProd, 1.0);
 	// calculates a color for the particle
-    //	gl_FragColor = vec4( vColor * vPointSize, 0.5 );
+	gl_FragColor = vec4( vColor * vPointSize, 1.0 );
 	// sets a white particle texture to desired color
 	//gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 }
@@ -113,35 +112,31 @@ void main()
     var shaderMaterial = new THREE.ShaderMaterial({
         uniforms: uniforms,
         vertexShader:   $('#vertexshader').text(),
-        fragmentShader: $('#fragmentshader').text(),
-        wireframeLinewidth: 2,
-        transparent: true,
-        wireframe: true
+        fragmentShader: $('#fragmentshader').text()
 //        vertexColors: THREE.VertexColors
     });
 
     var group = new THREE.Group();
 
 //    for (var i=100; i<600; i+=100) {
-        var geometry = new THREE.SphereGeometry(500, 300, 300);
-        var cloud = new THREE.Mesh(geometry, shaderMaterial);
+        var geometry = new THREE.SphereGeometry(500, 200, 200);
+        var cloud = new THREE.PointCloud(geometry, shaderMaterial);
         group.add(cloud);
 //    }
     scene.add(group);
 
-    var step = 1;
-    var frameNum = 0;
-    var rot = 0.005;
+    var step = 0.1;
+    var frameNum = 0, reverse = 480;
+    var rot = 0.00;
     function render() {
         requestAnimationFrame(render);
         renderer.render(scene, camera);
         controls.update();
         frameNum++;
-        if (frameNum>500) {
+        if (frameNum>reverse) {
             step = -step;
             frameNum = 0;
         }
-        console.log(frameNum);
         uniforms.step.value = uniforms.step.value + step;
 
         group.rotation.x += rot;
